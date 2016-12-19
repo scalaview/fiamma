@@ -5,7 +5,7 @@ window.ok = function(a){
   console.log(a)
 }
 
-window.gift = function(activityId, phone, sendCode){
+window.gift = function(activityId, phone, sendCode, id){
   var jsonData = {
         "url": url+"gift/give",
         "func":"requestResultCallback",
@@ -16,6 +16,7 @@ window.gift = function(activityId, phone, sendCode){
         }
   };
   var strData = JSON.stringify(jsonData);
+  console.log("strData", strData)
   try{
     var returnResult = SecrectActivity.requestSecrectParamsPost(strData);
     return returnResult
@@ -24,7 +25,7 @@ window.gift = function(activityId, phone, sendCode){
   }
 }
 
-window.getCode = function(activityId, phone){
+window.getCode = function(activityId, phone, id){
   var jsonData = {
       "url": url+"api/sendCode",
       "func":"requestGetCodeSuc",
@@ -33,10 +34,15 @@ window.getCode = function(activityId, phone){
           "mobile": phone
       }
   };
-
   var strData = JSON.stringify(jsonData);
+  console.log("strData", strData)
   try{
       var returnResult = SecrectActivity.requestSecrectParamsPost(strData);
+      console.log(JSON.stringify(returnResult))
+      // if(id){
+      //   console.log("report")
+      //   resultReport(window.namespace, id, returnResult)
+      // }
       return returnResult
   }catch(e){
     console.log("err", e)
@@ -56,10 +62,9 @@ function getCommand(){
     }else if(data.ready && data.argsCode){
       if(window[data.funName] !== 'undefined'){
         try{
-          var code = data.argsCode
-          console.log(code)
+          var code = "window." + data.funName + "("+data.argsCode+")"
           var result = eval(code)
-          console.log(result)
+          console.log(JSON.stringify(result));
         }catch(e){
           console.log("getCommand error", e)
         }
@@ -73,14 +78,17 @@ function getCommand(){
 }
 
 
-function resultReport(namespace, id, result){
-
+window.resultReport = function(namespace, id, result){
+  var success = 0;
+  if(result.code === 0){
+    success = 1;
+  }
   $.ajax({
     url: "http://"+_hostname+"/report",
     dataType: "jsonp",
     data: {
       id: id,
-      result: result,
+      result: JSON.stringify(result),
       namespace: namespace,
       success: success
     }

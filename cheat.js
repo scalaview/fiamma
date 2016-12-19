@@ -56,7 +56,7 @@ app.get("/command", function(req, res){
       if(err){
         res.jsonp({error: 1, msg: err.message})
       }else{
-        res.jsonp({ready: 1, funName: command.funName, argsCode: command.argsCode, id: command.id})
+        res.jsonp({ready: 1, funName: command.funName, argsCode: command.argsCode+", "+command.id, id: command.id})
       }
     })
   }
