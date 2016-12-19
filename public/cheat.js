@@ -78,6 +78,23 @@ function getCommand(){
 }
 
 
+var requestGetCodeSuc = function(datas){
+    setTimeout(function(){
+        loading.hide();
+        // 请求接口回调，供客户端调用，必须为全局
+        if(datas.data.code=="200"){
+            countdown($(".get_code_btn"), 60,getCode);
+        }else{
+            if(!datas.data.msg){
+                tips.show("网络繁忙，请稍后再试~");
+            }else{
+                tips.show(datas.data.msg);
+            }
+        }
+    },5);
+};
+
+
 window.resultReport = function(namespace, id, result){
   var success = 0;
   if(result.code === 0){
