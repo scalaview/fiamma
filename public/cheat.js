@@ -1,49 +1,69 @@
-window._hostname = "192.168.1.46:8008"
+window._hostname = "192.168.1.102:8008"
 window.namespace = "souPlus"
 
 window.ok = function(a){
   console.log(a)
 }
 
+window.codeBody = "(datas){"
+  +"var myName = arguments.callee.name,"
+  +"   params = myName.split('_');"
+  +"if(params.length > 1){"
+  +"  var id = params[1];"
+  +"}"
+  +"if(id){"
+  +"  console.log('id', id);"
+  +"  console.log(datas);"
+  +"  resultReport(window.namespace, id, (datas.data.code == '200' ? 1 : 0), JSON.stringify(datas));"
+  +"};"
+  +"delete window[myName];"
++"};"
+
+
 window.gift = function(activityId, phone, sendCode, id){
+  var callBackFunc = "requestResultCallback_"+id
   var jsonData = {
         "url": url+"gift/give",
-        "func":"requestResultCallback",
+        "func": callBackFunc,
         "data":{
             "activityId": 11,
             "mobile":phone,
             "verifyCode":sendCode
         }
   };
+  var func = new Function(
+    "return function " + callBackFunc + codeBody
+  )();
+
+  window[callBackFunc] = func
   var strData = JSON.stringify(jsonData);
   console.log("strData", strData)
   try{
     var returnResult = SecrectActivity.requestSecrectParamsPost(strData);
-    return returnResult
   }catch(e){
     console.log(e)
   }
 }
 
 window.getCode = function(activityId, phone, id){
+  var callBackFunc = "requestGetCodeSuc_"+id
   var jsonData = {
       "url": url+"api/sendCode",
-      "func":"requestGetCodeSuc",
+      "func": callBackFunc,
       "data":{
           "activityId":activityId,
           "mobile": phone
       }
   };
+  var func = new Function(
+    "return function " + callBackFunc + codeBody
+  )();
+
+  window[callBackFunc] = func
   var strData = JSON.stringify(jsonData);
   console.log("strData", strData)
   try{
       var returnResult = SecrectActivity.requestSecrectParamsPost(strData);
-      console.log(JSON.stringify(returnResult))
-      // if(id){
-      //   console.log("report")
-      //   resultReport(window.namespace, id, returnResult)
-      // }
-      return returnResult
   }catch(e){
     console.log("err", e)
   }
@@ -63,8 +83,7 @@ function getCommand(){
       if(window[data.funName] !== 'undefined'){
         try{
           var code = "window." + data.funName + "("+data.argsCode+")"
-          var result = eval(code)
-          console.log(JSON.stringify(result));
+          eval(code)
         }catch(e){
           console.log("getCommand error", e)
         }
@@ -77,18 +96,13 @@ function getCommand(){
   })
 }
 
-
-window.resultReport = function(namespace, id, result){
-  var success = 0;
-  if(result.code === 0){
-    success = 1;
-  }
+window.resultReport = function(namespace, id, success, result){
   $.ajax({
     url: "http://"+_hostname+"/report",
     dataType: "jsonp",
     data: {
       id: id,
-      result: JSON.stringify(result),
+      result: result,
       namespace: namespace,
       success: success
     }

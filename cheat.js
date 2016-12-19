@@ -67,7 +67,7 @@ app.get("/report", function(req, res){
       id = req.query.id,
       result = req.query.result,
       success = req.query.success
-  console.log(namespace, ",", id, ",", result);
+  console.log("namespace: ", namespace, ", id:", id, ", success:", success, ", result: ", result);
   if(namespace && id && result !== 'undefined'){
     async.waterfall([function(next){
       models.Commands.findOne({
