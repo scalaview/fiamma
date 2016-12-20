@@ -174,26 +174,7 @@ app.use("*", function(req, res, next) {
         }
       })
     }else if(path == 'http://static.nfapp.southcn.com/lxyzGetFlow/getFlow.html'){
-      request.get(target, function(err, hostres, body){
-        res.set(hostres.headers)
-        if (!err && hostres.statusCode == 200) {
-          var data = hostres.body.trim()
-          console.log(data)
-          try{
-            if(data.indexOf('</body>') !== -1){
-              var t = (new Date()).getTime()
-              data = data.replace('</body>', '<script src="http://192.168.1.46:8008/cheat.js?'+t+'"></script></body>')
-            }
-            console.log("data", data)
-          }catch(e){
-            console.log("json format error", e)
-          }
-          res.send(data)
-        }else{
-          console.log(err)
-          res.send("")
-        }
-      })
+      res.sendFile(__dirname + '/public/getFlow.html');
     }else{
       request.get(target).pipe(res)
     }
