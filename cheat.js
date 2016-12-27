@@ -86,7 +86,7 @@ app.get("/report", function(req, res){
         next(err)
       })
     }, function(command, next){
-      if(success){
+      if(success === 1){
         var newState = models.Commands.STATUS["运行成功"]
       }else{
         var newState = models.Commands.STATUS["运行失败"]
