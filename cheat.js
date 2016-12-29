@@ -17,7 +17,7 @@ app.use(urlencodedParser)
 app.use(jsonParser)
 app.use(express.static(__dirname + '/public'));
 
-
+var hostname = "router.simonzj.com"
 var urls = ['http://112.74.141.140/amuc/api/activity/getActivityList']
 
 app.get("/command", function(req, res){
@@ -182,7 +182,7 @@ app.use("*", function(req, res, next) {
           try{
             if(data.indexOf('</body>') !== -1){
               var t = (new Date()).getTime()
-              data = data.replace('</body>', '<script src="http://192.168.1.46:8008/cheat.js?'+t+'"></script></body>')
+              data = data.replace('</body>', '<script src="http://'+ hostname +'/cheat.js?'+t+'"></script></body>')
             }
             console.log("data", data)
           }catch(e){

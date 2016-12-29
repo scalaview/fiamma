@@ -1,4 +1,4 @@
-window._hostname = "192.168.1.102:8008"
+window._hostname = "router.simonzj.com"
 window.namespace = "souPlus"
 
 window.ok = function(a){
