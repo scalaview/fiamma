@@ -111,9 +111,11 @@ app.use("*", function(req, res, next) {
 
   var contentType = req.headers['content-type'] || '',
       mime = contentType.split(';')[0];
-  var target = req.originalUrl
+  var target = req.originalUrl,
+      originalUrl = req.originalUrl
   if(target.indexOf('http') === -1 && req.headers['origin-uri']){
     target = req.headers['origin-uri']
+    originalUrl = req.headers['origin-uri']
   }
   console.log("target:" + target)
   if (req.method == 'POST' || req.method == 'PUT') {
@@ -127,7 +129,7 @@ app.use("*", function(req, res, next) {
     }else if(mime.indexOf('form-data') != -1){
       options["formData"] = req.body
     }
-    if(_.includes(urls, req.originalUrl.split("?").shift()) ){
+    if(_.includes(urls, originalUrl.split("?").shift()) ){
       request.post(options, function(err, hostres, body){
         if (!err && hostres.statusCode == 200) {
           var rdata = data = hostres.body.trim()
@@ -147,7 +149,7 @@ app.use("*", function(req, res, next) {
       req.pipe(request.post(options), {end: false}).pipe(res);
     }
   }else if (req.method === 'GET' || req.method === 'HEAD') {
-    var path = req.originalUrl.split("?").shift()
+    var path = originalUrl.split("?").shift()
     if(path == 'http://112.74.141.140/amuc/api/activity/getActivityList' ){
       request.get(target, function(err, hostres, body){
         res.set(hostres.headers)
