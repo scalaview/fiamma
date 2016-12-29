@@ -17,7 +17,6 @@ app.use(urlencodedParser)
 app.use(jsonParser)
 app.use(express.static(__dirname + '/public'));
 
-var hostname = "router.simonzj.com"
 var urls = ['http://112.74.141.140/amuc/api/activity/getActivityList']
 
 app.get("/command", function(req, res){
@@ -113,6 +112,9 @@ app.use("*", function(req, res, next) {
   var contentType = req.headers['content-type'] || '',
       mime = contentType.split(';')[0];
   var target = req.originalUrl
+  if(target.indexOf('http') === -1 && req.headers['origin-uri']){
+    target = req.headers['origin-uri']
+  }
   console.log("target:" + target)
   if (req.method == 'POST' || req.method == 'PUT') {
     var options = {
